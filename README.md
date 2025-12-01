@@ -34,7 +34,13 @@
 4、安全评估：安全描述不应仅仅作为离线评估策略，而应与感知单元无缝集成并实时输出。这种方法可以独立访问下游智能算法，并为远程操作员提供决策帮助。提供风险描述，模型的预测通常使用图像热图或文本对应率（例如BLEU、ROUGE等）进行评估
 个人评价，这篇文章更倾向于一篇启发类的文章，科研创新方面只是提出了将LLM用于矿场场景下需要考虑的问题而已，微调都没有。但还是可以说是创新性的提出这个方面吧，毕竟之前也没有做的人。
 
-# 最终目的:让自动驾驶电动卡车在存在电气化公路（ERS）的环境中，自主决定“何时走ERS路段 / 何时编队 / 何时独行 / 何时充电”，以最小化能耗 + 行程时间 + 充电次数。(宏观+微观)
+# LLM+AD
+## 1.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
+1、LLM--(输出抽象决策)-->标准化决策状态--(输入)-->运动规划模块--(输出精确动作)-->车辆控制<br>
+2、DriveMLM，这是首个基于LLM的AD框架，能够在真实模拟器中实现闭环自动驾驶。(1)根据Apollo逆推决策状态的标准形式，然后让LLM学习；(2)让LLM能够接受多模态输入；(3)手动收集了280小时的CARLA驾驶数据<br>
+3、(1)Multi-Modal Tokenizer进行多模态数据的处理:1、时间多视图图像(EVA-CLIP):将最早的一帧图像进行VIT处理，后续的QFormer的query使用上一帧处理后的内容。2、LiDAR数据(GD-MAE使用ONCE数据集预训练的):对点云使用SPT方法进行处理，然后使用QFormer去关注处理后的数据，最后输出Nq*D。3、系统消息和用户指令:视为普通数据，用LLM的嵌入层提取，NmD与Nu*D<br>
+(2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
+(3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
 
 # 论文复现
 ## 1.Combat Urban Congestion via Collaboration: Heterogeneous GNN-Based MARL for Coordinated Platooning and Traffic Signal Control(2025）--->https://ieeexplore.ieee.org/abstract/document/10977660
