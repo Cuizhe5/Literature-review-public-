@@ -41,6 +41,7 @@
 3、(1)Multi-Modal Tokenizer进行多模态数据的处理:1、时间多视图图像(EVA-CLIP):将最早的一帧图像进行VIT处理，后续的QFormer的query使用上一帧处理后的内容。2、LiDAR数据(GD-MAE使用ONCE数据集预训练的):对点云使用SPT方法进行处理，然后使用QFormer去关注处理后的数据，最后输出Nq*D。3、系统消息和用户指令:视为普通数据，用LLM的嵌入层提取，NmD与Nu*D<br>
 (2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
 (3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
+受限与LLM的局限性，无法直接生产控制命令，因此这个模型的上限被Apollo给框死了，如果存在Apollo中没有的情况，那么这个模型也无法进行处理，因为这个模型本质上还是在做分类任务，将不同的情况输入到Apollo中。不过还是提出了很好的探索，后续可以继续跟进，类似于世界模型。
 
 # 论文复现
 ## 1.Combat Urban Congestion via Collaboration: Heterogeneous GNN-Based MARL for Coordinated Platooning and Traffic Signal Control(2025）--->https://ieeexplore.ieee.org/abstract/document/10977660
