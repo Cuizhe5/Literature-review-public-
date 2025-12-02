@@ -34,7 +34,7 @@
 4、安全评估：安全描述不应仅仅作为离线评估策略，而应与感知单元无缝集成并实时输出。这种方法可以独立访问下游智能算法，并为远程操作员提供决策帮助。提供风险描述，模型的预测通常使用图像热图或文本对应率（例如BLEU、ROUGE等）进行评估
 个人评价，这篇文章更倾向于一篇启发类的文章，科研创新方面只是提出了将LLM用于矿场场景下需要考虑的问题而已，微调都没有。但还是可以说是创新性的提出这个方面吧，毕竟之前也没有做的人。
 
-# LLM+AD
+# LLM\World Model+AD
 ## 1.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
 1、LLM--(输出抽象决策)-->标准化决策状态--(输入)-->运动规划模块--(输出精确动作)-->车辆控制<br>
 2、DriveMLM，这是首个基于LLM的AD框架，能够在真实模拟器中实现闭环自动驾驶。(1)根据Apollo逆推决策状态的标准形式，然后让LLM学习；(2)让LLM能够接受多模态输入；(3)手动收集了280小时的CARLA驾驶数据<br>
@@ -42,7 +42,18 @@
 (2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
 (3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
 受限与LLM的局限性，无法直接生产控制命令，因此这个模型的上限被Apollo给框死了，如果存在Apollo中没有的情况，那么这个模型也无法进行处理，因为这个模型本质上还是在做分类任务，将不同的情况输入到Apollo中。不过还是提出了很好的探索，后续可以继续跟进，类似于世界模型。
-
+## 2.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
+1、World4Drive 首先提取场景特征，包括驾驶意图和世界潜在表征，并通过视觉基础模型提供的空间语义先验进行丰富；根据当前场景特征和驾驶意图生成多模态规划轨迹，并预测潜在空间内的多个意图驱动的未来状态；引入了一个世界模型选择器模块来评估和选择最佳轨迹。<br>
+2、意图编码器:根据V(N(路径数)\*S(路径上的点数)\*2(x,y))先进行K-means聚合得到PI，再通过正弦位置编码进行处理得到QI，最后联合询问Qego进行自注意力得到Qplan；<br>
+物理潜在编码器:A.上下文编码器:引入具有开放词汇语义监督和 3D 几何感知位置编码的空间语义先验；Et和backbone生成的Ft结合生成新的Ft；<br>
+(1)3D位置编码:图像生成度量深度图Dt利用深度信息，将图像像素反向投影到 3D 空间，生成 **3D 位置图 (Pt)，再进行SPE位置嵌入得到位置嵌入Et**<br>
+(2)语义理解:图像经过backbone处理得到视觉特征图，再根据语义头尝试语义分割；利用 **Grounded-SAM**生成高质量的语义分割掩码作为伪标签St，与语义头生产的进行对比<br>
+B.时间聚合器:使用交叉注意力将历史信息Ft聚合到当前视觉特征中义获得Lt
+3、意图感知世界模型:根据多模式驾驶意图预测未来世界的潜在表示，并通过世界模型选择器对多模式规划轨迹进行评分
+A.Intention-aware World Model Dreamer:(1)动作编码:使用交叉注意力将上下文场景Lt融入到Qplan中，再通过多层MLP获取意图感知动作A(K\*D)
+(2)Intention-aware World Model Prediction:随机初始化一个可学习的查询 Q future ，与A和Lt进行交叉注意力计算Lt+n
+B.世界模型选择器:给定预测的意图感知未来潜在 L t+n 和实际未来潜在 ˆ L t+n ，我们计算每种模态的预测潜在表示和实际潜在表示之间的特征距离；选择距离最小的
+这篇论文是很不错的想法将World Model融入到AD中，但这篇论文为没有涉及到反应时间的问题以及可能在车载GPU上运行速度不够；以及模型的准确性依赖于Grounded-SAM生成伪标签的准确性。
 # 论文复现
 ## 1.Combat Urban Congestion via Collaboration: Heterogeneous GNN-Based MARL for Coordinated Platooning and Traffic Signal Control(2025）--->https://ieeexplore.ieee.org/abstract/document/10977660
 提出了一种基于异构图神经网络（Heterogeneous GNN）的多智能体强化学习（MARL）方法，用于同时协调“车队编队控制（platooning）”和“交通信号控制”。将车队控制（Platooning）和信号控制（Traffic Signal Control） 视为两类不同的智能体。每类智能体有独立的观测空间、动作空间和奖励函数，使用采用 alternating optimization，让不同类型的智能体交替更新策略。异构图神经网络表达不同类型智能体之间的交互关系。
