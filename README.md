@@ -35,14 +35,22 @@
 个人评价，这篇文章更倾向于一篇启发类的文章，科研创新方面只是提出了将LLM用于矿场场景下需要考虑的问题而已，微调都没有。但还是可以说是创新性的提出这个方面吧，毕竟之前也没有做的人。
 
 # LLM\World Model+AD
-## 1.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
+## 1.Planning-oriented Autonomous Driving(2023)--->http://arxiv.org/abs/2212.10156
+UniAD是一个统一自动驾驶算法框架，以规划为导向，启动的关键组件是将查询设计为连接所有节点的接口。包括四个基于Transformer解码器的感知和预测模块以及一个规划器<br>
+1、Perception:(1)TrackFormer:传统检测查询+跟踪查询，一开始所有query都去观察B特征，跟踪query会确认自己的目标是否消失，如果消失则下一帧去掉该query，检测query会检测是否有新的物体，如果有下一帧就成为跟踪query。在ego-vehicle中，query中引入了一个特定的自我车辆查询。最后输出 Na 个有效的物体信息（位置、速度、类别）Qa<br>
+(2)MapFormer:使用全景分割将地图元素分为可数物体(需要区分)以及不可数物体(可行驶区域)，最后输出Qm<br>
+2、Prediction:(1)Motion Former:观察其他车辆(Qa\交叉注意力)+观察地图(Qm\交叉注意力)+盯着终点看(Qg\可变注意力)--->Qctx;Qpos=Is(用K-means，提供一个**大概的、绝对位置的**初始猜测)+Ia(动作的相对位置)+X0(当前位置)+Xt(上一层网络预测的终点);利用非线形优化和代价函数避免不合物理学的动作<br>
+(2)OccFormer:利用To顺序块预测图，Gt=根据TrackFormer的Qa+Pa+Qx(未来动向)；利用缩小的B作为Qocc查看Gt<br>
+3、Planning:QPlan=Ego Query + Command Embedding；去“看”整个 BEV 特征图 B（包含了刚才 MapFormer 提取的路和 TrackFormer 提取的车）；优化器的目标是找到一条完美的轨迹使得代价最小=L2+斥力场<br>
+这篇论文是开创性的成果，把原有的自动驾驶框架给重新设计，基础是BEVFormer很多技术都可以在BEVFormer中看到。然后未来在如何设计和管理系统以实现轻量级部署值得未来探索。此外，是否纳入更多的任务，例如深度估计、行为预测，以及如何将它们嵌入到系统中，也是未来值得研究的方向。
+## 2.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
 1、LLM--(输出抽象决策)-->标准化决策状态--(输入)-->运动规划模块--(输出精确动作)-->车辆控制<br>
 2、DriveMLM，这是首个基于LLM的AD框架，能够在真实模拟器中实现闭环自动驾驶。(1)根据Apollo逆推决策状态的标准形式，然后让LLM学习；(2)让LLM能够接受多模态输入；(3)手动收集了280小时的CARLA驾驶数据<br>
 3、(1)Multi-Modal Tokenizer进行多模态数据的处理:1、时间多视图图像(EVA-CLIP):将最早的一帧图像进行VIT处理，后续的QFormer的query使用上一帧处理后的内容。2、LiDAR数据(GD-MAE使用ONCE数据集预训练的):对点云使用SPT方法进行处理，然后使用QFormer去关注处理后的数据，最后输出Nq*D。3、系统消息和用户指令:视为普通数据，用LLM的嵌入层提取，NmD与Nu*D<br>
 (2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
 (3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
 受限与LLM的局限性，无法直接生产控制命令，因此这个模型的上限被Apollo给框死了，如果存在Apollo中没有的情况，那么这个模型也无法进行处理，因为这个模型本质上还是在做分类任务，将不同的情况输入到Apollo中。不过还是提出了很好的探索，后续可以继续跟进，类似于世界模型。
-## 2.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
+## 3.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
 1、World4Drive 首先提取场景特征，包括驾驶意图和世界潜在表征，并通过视觉基础模型提供的空间语义先验进行丰富；根据当前场景特征和驾驶意图生成多模态规划轨迹，并预测潜在空间内的多个意图驱动的未来状态；引入了一个世界模型选择器模块来评估和选择最佳轨迹。<br>
 2、意图编码器:根据V(N(路径数)\*S(路径上的点数)\*2(x,y))先进行K-means聚合得到PI，再通过正弦位置编码进行处理得到QI，最后联合询问Qego进行自注意力得到Qplan；<br>
 物理潜在编码器:A.上下文编码器:引入具有开放词汇语义监督和 3D 几何感知位置编码的空间语义先验；Et和backbone生成的Ft结合生成新的Ft；<br>
