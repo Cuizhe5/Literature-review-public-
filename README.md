@@ -58,7 +58,11 @@ Classifier-free Guidance (CFG):将车辆边界框 (Boxes)、高精地图 (Maps)�
 (2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
 (3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
 受限与LLM的局限性，无法直接生产控制命令，因此这个模型的上限被Apollo给框死了，如果存在Apollo中没有的情况，那么这个模型也无法进行处理，因为这个模型本质上还是在做分类任务，将不同的情况输入到Apollo中。不过还是提出了很好的探索，后续可以继续跟进，类似于世界模型。
-## 4.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
+## 4.DriveDreamer: Towards Real-world-driven World Models for Autonomous Driving(2023)--->http://arxiv.org/abs/2309.09777
+DriveDreamer 是第一个根据现实驾驶场景建立的世界模型，能够生成精确、可控的视频，忠实地捕捉现实世界交通场景的结构约束。此外，DriveDreamer 还能够生成现实合理的驾驶策略。<br>
+ActionFormer 来预测潜在空间中即将出现的道路结构特征。这些预测的特征作为条件并提供给 Auto-DM，Auto-DM 会生成未来的驾驶视频。同时，利用文本提示可以动态调整驾驶场景风格（例如天气和一天中的时间）。此外，DriveDreamer融合了历史动作信息和从Auto-DM中提取的多尺度潜在特征，将其组合起来生成合理的未来驾驶动作<br>
+
+## 5.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
 1、World4Drive 首先提取场景特征，包括驾驶意图和世界潜在表征，并通过视觉基础模型提供的空间语义先验进行丰富；根据当前场景特征和驾驶意图生成多模态规划轨迹，并预测潜在空间内的多个意图驱动的未来状态；引入了一个世界模型选择器模块来评估和选择最佳轨迹。<br>
 2、意图编码器:根据V(N(路径数)\*S(路径上的点数)\*2(x,y))先进行K-means聚合得到PI，再通过正弦位置编码进行处理得到QI，最后联合询问Qego进行自注意力得到Qplan；<br>
 物理潜在编码器:A.上下文编码器:引入具有开放词汇语义监督和 3D 几何感知位置编码的空间语义先验；Et和backbone生成的Ft结合生成新的Ft；<br>
