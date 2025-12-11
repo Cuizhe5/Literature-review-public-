@@ -47,7 +47,11 @@ UniAD是一个统一自动驾驶算法框架，以规划为导向，启动的关
 (2)OccFormer:利用To顺序块预测图，Gt=根据TrackFormer的Qa+Pa+Qx(未来动向)；利用缩小的B作为Qocc查看Gt<br>
 3、Planning:QPlan=Ego Query + Command Embedding；去“看”整个 BEV 特征图 B（包含了刚才 MapFormer 提取的路和 TrackFormer 提取的车）；优化器的目标是找到一条完美的轨迹使得代价最小=L2+斥力场<br>
 这篇论文是开创性的成果，把原有的自动驾驶框架给重新设计，基础是BEVFormer很多技术都可以在BEVFormer中看到。然后未来在如何设计和管理系统以实现轻量级部署值得未来探索。此外，是否纳入更多的任务，例如深度估计、行为预测，以及如何将它们嵌入到系统中，也是未来值得研究的方向。
-## 3.MagicDrive: Street View Generation with Diverse 3D Geometry Control(2023)--->https://arxiv.org/abs/2310.02601v7
+## 3.UniSim: A Neural Closed-Loop Sensor Simulator(2023)--->10.48550/arXiv.2308.01898
+UniSim，这是一种神经传感器模拟器，它采用配备传感器的车辆捕获的单个记录日志，并将其转换为现实的闭环多传感器模拟。构建神经特征网格来重建场景中的静态背景和动态演员，并将它们合成在一起<br>
+利用神经渲染技术（NeRF/NFF），把一段真实的驾驶视频变成了一个可以自由漫游、可以编辑（比如在路上加一辆车）的 3D 虚拟世界，专门用来训练和测试自动驾驶系统。<br>
+可以说是世界模型的先驱了，都是基于真实的驾驶视频来生成，不过这个主要是构建虚拟场景，世界模型主要是预测未来的视频。
+## 4.MagicDrive: Street View Generation with Diverse 3D Geometry Control(2023)--->https://arxiv.org/abs/2310.02601v7
 MAGICDRIVE，一种新颖的街景生成框架，提供多种 3D 几何控制，包括相机姿势、道路地图和 3D 边界框，以及通过定制编码策略实现的文本描述<br>
 几何条件编码:(1)场景级编码:将Prompt利用CLIP进行编码ht；将Camera Pose利用傅里叶嵌入进行处理，避免频谱偏差(高频率变化学习的差)hc；最后把ht和hc融合起来，[相机向量, 单词1, 单词2, 单词3...]。<br>
 (2)3D边界框编码:身份编码:利用CLIP编码框的标签ci；位置编码:给 **8 个角点** 的坐标（8\*3）进行傅立叶嵌入bi；最后将ci和bi压缩成一个隐藏向量hb。几何过滤:只把看得见的框，喂给对应的 Cross-Attention 模块<br>
@@ -55,18 +59,18 @@ MAGICDRIVE，一种新颖的街景生成框架，提供多种 3D 几何控制，
 跨视角注意力机制:Q为当前生成视角，KV为左视角或右视角；把左视角注意力和右视角注意力加到主视角的hin中。<br>
 Classifier-free Guidance (CFG):将车辆边界框 (Boxes)、高精地图 (Maps)保留，将相机位姿 (Camera pose)、文本描述 (Text embeddings)以一定的概率丢弃<br>
 这篇论文可以说是将Diffusion Model模型应用于图像生成的优秀作品了，可以为后来的世界模型的视频生成提供很好的借鉴。
-## 4.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
+## 5.DriveMLM: Aligning Multi-Modal Large Language Models with Behavioral Planning States for Autonomous Driving(2023)--->http://arxiv.org/abs/2312.09245
 1、LLM--(输出抽象决策)-->标准化决策状态--(输入)-->运动规划模块--(输出精确动作)-->车辆控制<br>
 2、DriveMLM，这是首个基于LLM的AD框架，能够在真实模拟器中实现闭环自动驾驶。(1)根据Apollo逆推决策状态的标准形式，然后让LLM学习；(2)让LLM能够接受多模态输入；(3)手动收集了280小时的CARLA驾驶数据<br>
 3、(1)Multi-Modal Tokenizer进行多模态数据的处理:1、时间多视图图像(EVA-CLIP):将最早的一帧图像进行VIT处理，后续的QFormer的query使用上一帧处理后的内容。2、LiDAR数据(GD-MAE使用ONCE数据集预训练的):对点云使用SPT方法进行处理，然后使用QFormer去关注处理后的数据，最后输出Nq*D。3、系统消息和用户指令:视为普通数据，用LLM的嵌入层提取，NmD与Nu*D<br>
 (2)MLLM Decoder(LLaMA-7B):为基于LLM的AD设计了一个系统消息模板；输出经过格式化以提供决策状态和决策解释。使用交叉熵损失进行预测与迭代。<br>
 (3)Efficient Data Engine:提出了一个数据生成管道，可以根据 CARLA 模拟器中的各种场景创建决策状态和解释注释。分为数据收集和数据注释<br>
 受限与LLM的局限性，无法直接生产控制命令，因此这个模型的上限被Apollo给框死了，如果存在Apollo中没有的情况，那么这个模型也无法进行处理，因为这个模型本质上还是在做分类任务，将不同的情况输入到Apollo中。不过还是提出了很好的探索，后续可以继续跟进，类似于世界模型。
-## 5.DriveDreamer: Towards Real-world-driven World Models for Autonomous Driving(2023)--->http://arxiv.org/abs/2309.09777
+## 6.DriveDreamer: Towards Real-world-driven World Models for Autonomous Driving(2023)--->http://arxiv.org/abs/2309.09777
 DriveDreamer 是第一个根据现实驾驶场景建立的世界模型，能够生成精确、可控的视频，忠实地捕捉现实世界交通场景的结构约束。此外，DriveDreamer 还能够生成现实合理的驾驶策略。<br>
 ActionFormer 来预测潜在空间中即将出现的道路结构特征。这些预测的特征作为条件并提供给 Auto-DM，Auto-DM 会生成未来的驾驶视频。同时，利用文本提示可以动态调整驾驶场景风格（例如天气和一天中的时间）。此外，DriveDreamer融合了历史动作信息和从Auto-DM中提取的多尺度潜在特征，将其组合起来生成合理的未来驾驶动作<br>
 
-## 6.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
+## 7.World4Drive: End-to-End Autonomous Driving via Intention-aware Physical Latent World Model(2025)--->https://arxiv.org/abs/2507.00603
 1、World4Drive 首先提取场景特征，包括驾驶意图和世界潜在表征，并通过视觉基础模型提供的空间语义先验进行丰富；根据当前场景特征和驾驶意图生成多模态规划轨迹，并预测潜在空间内的多个意图驱动的未来状态；引入了一个世界模型选择器模块来评估和选择最佳轨迹。<br>
 2、意图编码器:根据V(N(路径数)\*S(路径上的点数)\*2(x,y))先进行K-means聚合得到PI，再通过正弦位置编码进行处理得到QI，最后联合询问Qego进行自注意力得到Qplan；<br>
 物理潜在编码器:A.上下文编码器:引入具有开放词汇语义监督和 3D 几何感知位置编码的空间语义先验；Et和backbone生成的Ft结合生成新的Ft；<br>
